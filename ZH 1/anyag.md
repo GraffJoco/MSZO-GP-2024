@@ -1,3 +1,15 @@
+# Tartalom
+
+- [C++/CLI alapjai](#ccli-nyelv-alapjai)  
+  - [Példa: C++ kód átalakítása C++/CLI-be](#példa-c-kód-átalakítása-ccli-be)
+- [Grafikus felületek alapjai](#grafikus-felületek-alapjai)
+  - [Példa: szám prím osztóinak meghatározása](#példa-szám-prím-osztóinak-keresése)
+- [Grafikus Rajzolás a C++/CLI-ben](#grafikus-rajzolás-a-ccli-ben)
+  - [Rajzolás a CreateGraphics függvénnyel](#creategraphics-használata-rajzoláshoz-formon)
+  - [Példa: f(x) = sin(x * PI) megjelenítése](#példa-függvény-kirajzolása)
+  - [Rajzolás PictureBox használatával](#rajzolás-picturebox-használatával)
+  - [Példa: Rezgéstani szimulátor írása](#példa-rezgéstani-szimulátor)
+
 # C++/CLI nyelv alapjai
 
 A C++/CLI a Microsoft külön programnyelve, amivel a .NET platformra lehet C++ kódot írni. Emiatt gyakran a C# nyelvhez szokták hasonlítani.  
@@ -431,7 +443,8 @@ $$\Delta t = 0,1 [s]$$
 
 Legyen egy $v[k]$ sebesség, $x[k]$ pozíció változónk. Mechatronikai alapjain tanult tudásunkkal fel tudjuk írni a sebességképletet, abból meg triviálisan a mostani sebességet.
 
-$${m\over{\Delta t}}\cdot(v[k+1]-v[k]) = -kx[k]-cv[k]$$
+$${m\over{\Delta t}}\cdot(v[k+1]-v[k]) = -kx[k]-cv[k]$$  
+
 $$x[k+1] = x[k] + v[k]\cdot\Delta t$$
 
 Átrendezve:
