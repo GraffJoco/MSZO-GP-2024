@@ -1,6 +1,4 @@
-# Grafikus Felületek 1. ZH anyaga
-
-## C++/CLI nyelv alapjai
+# C++/CLI nyelv alapjai
 
 A C++/CLI a Microsoft külön programnyelve, amivel a .NET platformra lehet C++ kódot írni. Emiatt gyakran a C# nyelvhez szokták hasonlítani.  
 
@@ -31,7 +29,7 @@ Ezen kívül az osztályainknak egy új tulajdonság beállítása van: a `prope
 
 ---
 
-### Példa: C++ kód átalakítása C++/CLI-be
+## Példa: C++ kód átalakítása C++/CLI-be
 
 Feladat: Készítjünk egy pénzügyi adatfeldolgozó osztályt! A konstruktor kérjen egy stringet, ami megadja az osztálynak, hogy melyik (CSV formátumú) fájlt olvassa be!  
 A fájl soraból olvasd ki `bevetel;kiadas` formátumban az akkori bevételeket, kiadásokat (ezek double-ök)!  
@@ -171,8 +169,7 @@ public:
     }
 };
 
-int main(array<System::String ^> ^args)
-{
+int main(array<System::String ^> ^args) {
     String^ fajlnev = "adat3.csv";
     adatfeldolgozo^ adatok = gcnew adatfeldolgozo(fajlnev);
 
@@ -184,7 +181,7 @@ int main(array<System::String ^> ^args)
 
 ---
 
-## Grafikus Felületek Alapjai
+# Grafikus Felületek Alapjai
 
 A C++/CLI legfőbb előnye az, hogy relatíve egyszerűen tudunk benne grafikus felületű programokat fejleszteni. Ehhez a `WindowsForm` nevű sablont fogjuk alkalmazni, ami az első pár lépést helyettünk megcsinálja.  
 A létrehozott projekt a következőképpen fog kinézni:
@@ -220,7 +217,7 @@ Ahhoz, hogy függvényeket kössünk egyes eseményekhez, vagy a `Properties->Ev
 
 ---
 
-### Példa: Szám prím osztóinak keresése
+## Példa: Szám prím osztóinak keresése
 
 Csinálj egy ablakot, ahol egy egész számot tudsz írni, és gombnyomásra pontosvesszővel elválasztva kiírja a szám osztóit!
 
@@ -255,6 +252,7 @@ private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
 Gombnyomáskor be tudjuk olvasni az ottani számot egy int változóba, és akkor egy while és egy for ciklussal ki tudjuk írni az osztóit a következő algoritmussal:
 
 ~~~C++
+// ...
 private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
     // Érték beolvasása
     int mostSzam = Convert::ToInt32(textBox1->Text);
@@ -285,8 +283,271 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
         }
     }
 }
+// ...
 ~~~
 
 **Eredmény:**
 
-![Eredmény](képek/PrimFeladat2.png)
+![Prímszámító ablak](képek/PrimFeladat2.png)
+
+# Grafikus rajzolás a C++/CLI-ben
+
+Több módon lehet rajzolni  a C++/CLI nyelvben, és gyakorlatvezetőtől függ, hogy melyik(ek)et fogjátok használni. Ezek közül az első, és leggyakoribb, a Form `CreateGraphics()` függvényével történik.
+
+## CreateGraphics használata rajzoláshoz formon
+
+A `Graphics^` osztállyal lehet rajzolni ebben a megoldásban. Ezt, és a rajzolásra használt `Pen^` osztályt csak tagfüggvényben lehet inicializálni, különben a fordító errort ad.
+
+Ezután viszont rajzolni relatíve egyszerű: a `Graphics^` típusú tagváltozónknak sok különböző függvénye van, amivel például vonalt (`DrawLine()`), kört (`DrawEllipse`), vagy törölni a képet (`Clear`)
+
+## Példa: függvény kirajzolása
+
+Rajzoljuk ki az $f(x) = sin(x\cdot\pi)$ függvényt! Automatikusan rajzold ki ezt!
+
+**Szükséges függvények, változók**
+
+Először létrehozzuk az $f(x)$ függvényünket:
+
+~~~C++
+double f(double x) {
+    return Math::Sin(x * Math::PI);
+}
+~~~
+
+Utána a rajzoláshoz kellenek a következő változók:
+
+- `Graphics^ gr`: rajzolásért felel
+- `Pen^ toll`: rajzoló toll
+- `double nagyitas`: x és y tengelyek nagyítási tényezője
+- `double eltolas`: x tengelyt eltolja
+
+Szükségünk lesz egy pont struktúrára is. Ehhez alkalmazható a `System::Drawing::Point` struktúra, de gyakorlásként saját ref osztály írunk rá:
+
+~~~C++
+ref struct pont {
+    int x, y;
+
+    pont(int x, int y) : x(x), y(y) {}
+};
+~~~
+
+Mivel automatikusan rajzolunk, ezért a Form Paint eventjét használjuk *(Megj.: Form Loadban nem lehet rajzolni)*
+
+![Form Paint ablak](képek/PaintProperty.png)
+
+Itt lesz egy for ciklussal vonalakból összerakva a függvényünk.
+
+**Kész kód**
+
+~~~C++
+Pen^ toll;
+Graphics^ gr;
+
+double f(double x) {
+    return Math::Sin(x * Math::PI);
+}
+
+ref struct pont {
+    int x, y;
+
+    pont(int x, int y) : x(x), y(y) {}
+};
+
+double nagyitas = 0.25;
+double eltolas = 0.2;
+
+private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
+    this->Text = L"f(x)";
+}
+
+private: System::Void Form1_Paint(System::Object^ sender, System::Windows::Forms::PaintEventArgs^ e) {
+    // Rajzosztályok létrehozása
+    toll = gcnew Pen(Color::Black);
+    gr = this->CreateGraphics();
+
+    // ablak törlése, x,y tengely rajzolása
+    gr->Clear(SystemColors::Control);
+    gr->DrawLine(toll, 0, this->ClientRectangle.Height / 2,
+        this->ClientRectangle.Width, this->ClientRectangle.Height / 2);
+    gr->DrawLine(toll, (0.5 - eltolas) * this->ClientRectangle.Width, 0,
+        (0.5 - eltolas) * this->ClientRectangle.Width, this->ClientRectangle.Height);
+
+    // ciklus változóinak létrehozása
+    pont^ utolso = gcnew pont(0, 0);
+    bool elso = true;
+    toll->Color = Color::DarkRed;
+
+    for (int i = 0; i < this->ClientRectangle.Width / nagyitas; i++) {
+        // Mostani pont meghatározása csúnya képlettel
+        pont^ mostani = gcnew pont(i * nagyitas,
+            Convert::ToInt32(
+                f((double(i) / this->ClientRectangle.Width) - eltolas)
+                * nagyitas * this->ClientRectangle.Height + this->ClientRectangle.Height/2));
+        
+        // Rajzolás (első kivételével, mert akkor nincs honnan)
+        if (elso) {
+            elso = false;
+        } else {
+            gr->DrawLine(toll, utolso->x, utolso->y, mostani->x, mostani->y);
+        }
+
+        // <<Bergendy idézet ide>>
+        utolso = mostani;
+    }
+}
+~~~
+
+**Eredmény:**
+
+![f(x) = sin(x)](képek/sinx.png)
+
+Az ablak újrarajzolja magát, ha átméretezzük.
+
+## Rajzolás PictureBox használatával
+
+Ha teszteltétek az előző példát, láttátok, hogy elég lassan rajzol, és ha sokat kell újrarajzolni, akkor a kép szakadós/csúnya lenne.  
+Ennek a következő a megoldása: PictureBox kontrollba rajzolunk úgy, hogy csak akkor frissítjük a képet, ha már kész van.  
+Máshogy megfogalmazva: Egy Bitmap-be rajzolunk, és ha kész a rajzoló algoritmusunk, lecseréljük a PictureBox képét.
+
+Működés:
+
+1. `Bitmap^` típussal csinálsz egy változót, konstruktorban mérete egyenlő a `pictureBox->ClientRectangle`-éval  
+2. Csinálsz `Pen^` és/vagy `Brush` rajzeszközt  
+3. `Graphics::FromImage()` függvénnyel a Bitmapból grafikát csinálsz  
+4. Rajzolsz  
+5. Rajzolás után `pictureBox->Image = bitmap`-pal frissíted a képet
+
+## Példa: Rezgéstani szimulátor
+
+Feladat: Csináljunk egy rezgéstani szimulátort! Textboxokban kérd be a felhasználótól egy (súrlódásmentesen csúszó) tömeg, és hozzákötött párhuzamos rugó-csillapításrendszer $k$ rugóállandóját, $c$ csillapítását, $v_0$ kezdősebességét, $m$ tömegét, és szimuláld le!
+
+Szükséges képletek, konstansok:
+
+$$m\ddot{x}(t)=-kx-c\dot{x}(t)$$
+
+$$\Delta t = 0,1 [s]$$
+
+**Első lépés: képlet átrendezése**
+
+Legyen egy $v[k]$ sebesség, $x[k]$ pozíció változónk. Mechatronikai alapjain tanult tudásunkkal fel tudjuk írni a sebességképletet, abból meg triviálisan a mostani sebességet.
+
+$${m\over{\Delta t}}\cdot(v[k+1]-v[k]) = -kx[k]-cv[k]$$
+$$x[k+1] = x[k] + v[k]\cdot\Delta t$$
+
+Átrendezve:
+
+$$v[k] = v[k-1] - {{\Delta t}\over m}\cdot(kx[k-1]+c)$$
+
+$$x[k + 1]=x[k]+v[k]\cdot\Delta t$$
+
+**Második lépés: Ablak elkészítése**
+
+Kellenek nekünk Label, TextBox, Button és PictureBox objektumok a következő elrendezésben:
+
+![Rezgéstan Form](képek/RezgesForm.png)
+
+Ezen kívül kell egy timer is, ami $\Delta t$ időnként fut
+
+**Harmadik lépés: Változók**
+
+Kell nekünk minden fizikai paraméterre double változó, valamint  
+
+- egy fut nevű változó, ami tárolja, hogy fut-e a szimuláció
+- rajzoláshoz egy `Bitmap^`, `Graphics^`, `Brush^`, `Pen^` típusú változó
+- hogy ne minden pixel $1m$ nagy legyen, egy double típusú nagyítási változó is
+
+**Negyedik lépés: Load függvény**
+
+A Form load-ba nem csak elnevezzük az egyes kontrol elemeket, hanem ezen kívül beállítjuk a timer futási időközét
+
+**Ötödik lépés: Gombnyomás**
+
+Ha fut a szimuláció, a gomb leállítja, különbenelindítja a szimulációt, a paramétereket a Texboxokból beolvassa.
+
+**Utolsó lépés: szimuláció és rajzolás**
+
+A tanultak alapján csinálunk egy `rajzol()` függvényt, ami lerajzolja a szimulációs státuszt, valamint a `timer1_Tick` eventben az első lépésben meghatározott képlettel kiszámoljuk az új sebességet és pozíciót.
+
+**Eredmény:**
+
+~~~C++
+// ...
+    Bitmap^ rajz;
+    Pen^ toll;
+    Brush^ ecset;
+    Graphics^ gr;
+
+    bool fut = false;
+    double c, k, v, m, x;
+    const double dt = 0.1;
+    const double nagyitas = 0.1;
+
+private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
+    button1->Text = L"Indít";
+    label1->Text = "N/m";
+    label2->Text = "Ns/m";
+    label3->Text = "m/s";
+    label4->Text = "kg";
+    label5->Text = String::Format("dt = {0} s\n1 px = {1} m", dt, nagyitas);
+    timer1->Interval = Convert::ToInt32(dt * 1000);
+
+    x = pictureBox1->ClientRectangle.Width / 2;
+}
+
+
+private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
+    if (fut) {
+        fut = false;
+        timer1->Stop();
+        button1->Text = L"Indít";
+        return;
+    }
+    
+    x = pictureBox1->ClientRectangle.Width / 2;
+    
+    k = Double::Parse(textBox1->Text);
+    c = Double::Parse(textBox2->Text);
+    v = Double::Parse(textBox3->Text);
+    m = Double::Parse(textBox4->Text);
+
+    timer1->Start();
+    fut = true;
+    button1->Text = "Stop";
+}
+void rajzol() {
+    rajz = gcnew Bitmap(pictureBox1->ClientRectangle.Width,
+        pictureBox1->ClientRectangle.Height);
+    gr = Graphics::FromImage(rajz);
+    ecset = gcnew SolidBrush(Color::DarkGray);
+    toll = gcnew Pen(Color::Black);
+
+    gr->Clear(SystemColors::Control);
+    gr->DrawLine(toll, 0, 40, pictureBox1->ClientRectangle.Width, 40);
+
+    toll->Color = Color::DarkBlue;
+    gr->DrawLine(toll, x + 10, 25, pictureBox1->ClientRectangle.Width, 25);
+
+    toll->Color = Color::DarkRed;
+    gr->DrawLine(toll, x + 10, 35, pictureBox1->ClientRectangle.Width, 35);
+    gr->FillRectangle(ecset, x - 20, 20, 40, 20);
+
+    pictureBox1->Image = rajz;
+}
+private: System::Void timer1_Tick(System::Object^ sender, System::EventArgs^ e) {
+    // ma = -kx - cv -> v[t + 1] = dt/m*(-kx[t - 1] - cv[t]) + v[t]
+    const double dx = x - pictureBox1->ClientRectangle.Width / 2;
+    
+    v = dt / m * (-k * dx - c * v) + v;
+    x = x + v * dt / nagyitas;
+
+    label6->Text = String::Format("x = {0} m\nv = {1} m/s",
+        x - pictureBox1->ClientRectangle.Width / 2, v);
+
+    rajzol();
+}
+// ...
+~~~
+
+A szimuláció így néz ki:
+
+![Szimuláció](képek/RezgésSzim.png)
