@@ -479,7 +479,7 @@ Ha fut a szimuláció, a gomb leállítja, különbenelindítja a szimulációt,
 
 **Utolsó lépés: szimuláció és rajzolás**
 
-A tanultak alapján csinálunk egy `rajzol()` függvényt, ami lerajzolja a szimulációs státuszt, valamint a `timer1_Tick` eventben az első lépésben meghatározott képlettel kiszámoljuk az új sebességet és pozíciót.
+A tanultak alapján csinálunk egy `rajzol()` függvényt, ami lerajzolja a szimulációs státuszt, létrehozzuk a rajzoló objektumokat, valamint a `timer1_Tick` eventben az első lépésben meghatározott képlettel kiszámoljuk az új sebességet és pozíciót.
 
 **Eredmény:**
 
@@ -496,6 +496,12 @@ A tanultak alapján csinálunk egy `rajzol()` függvényt, ami lerajzolja a szim
     const double nagyitas = 0.1;
 
 private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
+    rajz = gcnew Bitmap(pictureBox1->ClientRectangle.Width,
+        pictureBox1->ClientRectangle.Height);
+    gr = Graphics::FromImage(rajz);
+    ecset = gcnew SolidBrush(Color::DarkGray);
+    toll = gcnew Pen(Color::Black);
+
     button1->Text = L"Indít";
     label1->Text = "N/m";
     label2->Text = "Ns/m";
@@ -528,12 +534,6 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
     button1->Text = "Stop";
 }
 void rajzol() {
-    rajz = gcnew Bitmap(pictureBox1->ClientRectangle.Width,
-        pictureBox1->ClientRectangle.Height);
-    gr = Graphics::FromImage(rajz);
-    ecset = gcnew SolidBrush(Color::DarkGray);
-    toll = gcnew Pen(Color::Black);
-
     gr->Clear(SystemColors::Control);
     gr->DrawLine(toll, 0, 40, pictureBox1->ClientRectangle.Width, 40);
 
