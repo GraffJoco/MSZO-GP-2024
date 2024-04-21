@@ -9,6 +9,8 @@
   - [Példa: f(x) = sin(x * PI) megjelenítése](#példa-függvény-kirajzolása)
   - [Rajzolás PictureBox használatával](#rajzolás-picturebox-használatával)
   - [Példa: Rezgéstani szimulátor írása](#példa-rezgéstani-szimulátor)
+- [Fájlkezelés FileDialog használatával](#fájlkezelés-filedialog-használatával)
+  - [Példa: Notepad a C++/CLI-ben](#példa-notepad-ccli-ben)
 
 # C++/CLI nyelv alapjai
 
@@ -564,3 +566,164 @@ private: System::Void timer1_Tick(System::Object^ sender, System::EventArgs^ e) 
 A szimuláció így néz ki:
 
 ![Szimuláció](képek/RezgésSzim.png)
+
+# Fájlkezelés FileDialog használatával
+
+Ha meg akarsz nyitni egy fájlt akármilyen alkalmazásban, akkor általában megnyílik egy kis ablak, ahol ki tudod választani a fájlok közül a jót. Ez egy nyitó fájldialógus, vagyis `OpenFileDialog`, mentésnél meg `SaveFileDialog`.
+
+Ezeknél be lehet állítani egy szűrőt, hogy milyen fájltípusokat fogajon el, ezeket a következő formátumban adjuk meg: `saveFileDialog1->Filter = L"Fájltípus neve|*.tipus";`
+
+Megnyitás a `ShowDialog()` tagfüggvénnyel történik, ami visszaadja a megnyomot gombot. Csak akkor megyünk tovább, ha ez az ok gomb, aminek a (gyönyörű, és rövid) kódja `Windows::Forms::DialogResult::OK`.
+
+Ezután egy Stringbe a `FileName` tulajdonsággal kiolvashatjuk a megnyitott/mentett fájl nevét, és Streamekkel lehet azt kezelni.
+
+## Példa: Szövegszerkesztő C++/CLI-ben
+
+Rekreáljuk a Notepadet! Felül lévő MenuStrip gombjaival tudjunk írni és menteni fájlt. Alul írjuk ki a fájl helyét, és mentési státuszát. A képernyő többi részén egy TextBoxba lehessen szöveget írni.
+
+A következő módon néz ki az ablakunk:
+
+![Szövegszerkesztő Ablak](képek/Szovegszerk1.png)
+
+**Ablak betöltése**
+
+Ablak betöltésekor a szövegek kiírásán kívül a következő lépéseket is meg kell tenni:
+
+- Szövegdoboz többsorossá tétele
+- Szövegdoboz elhelyezése
+- Fájldialógusok szűrőjének beállítása
+
+Ezért így néz ki a load függvény:
+
+~~~C++
+private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
+    // Megj.: ha ide Notepadet írsz, a Windows azt
+    // hiszi, hogy trójai a programod
+    this->Text = L"Joepad";
+    toolStripStatusLabel1->Text = L"Nincs mentve";
+    toolStripStatusLabel2->Text = L"Ismeretlen fájl";
+    toolStripMenuItem1->Text = L"Fájl";
+    toolStripMenuItem2->Text = L"Mentés";
+    toolStripMenuItem3->Text = L"Megnyitás";
+    toolStripMenuItem4->Text = L"Kilépés";
+    textBox1->Multiline = true;
+    textBox1->Top = menuStrip1->Height;
+    textBox1->Left = 0;
+    textBox1->Width = this->ClientRectangle.Width;
+    textBox1->Height = this->ClientRectangle.Height - menuStrip1->Height - statusStrip1->Height;
+    openFileDialog1->Filter = L"Minden fájl|*";
+    saveFileDialog1->Filter = L"Minden fájl|*";
+}
+~~~
+
+**Fájl megnyitása**
+
+Ha a nyitógombra (`toolStripMenuItem3`) nyomunk, a fájldialógussal meg tudunk nyitni egy fájlt, a szövegét textBox1-be írja. A függvényünk így néz ki (fajlnev egy globális String^ változó):
+
+~~~C++
+private: System::Void toolStripMenuItem3_Click(System::Object^ sender, System::EventArgs^ e) {
+    if (openFileDialog1->ShowDialog() != Windows::Forms::DialogResult::OK) return;
+
+    fajlnev = openFileDialog1->FileName;
+    StreamReader^ olvaso = gcnew StreamReader(fajlnev);
+    textBox1->Text = olvaso->ReadToEnd();
+    olvaso->Close();
+
+    toolStripStatusLabel1->Text = "Mentve";
+    toolStripStatusLabel2->Text = fajlnev;
+}
+~~~
+
+**Fájl mentése**
+
+A fájlt mentő függvény is hasonló:
+
+~~~C++
+private: System::Void toolStripMenuItem2_Click(System::Object^ sender, System::EventArgs^ e) {
+    if (saveFileDialog1->ShowDialog() != Windows::Forms::DialogResult::OK) return;
+
+    fajlnev = saveFileDialog1->FileName;
+    StreamWriter^ iro = gcnew StreamWriter(fajlnev);
+    iro->Write(textBox1->Text);
+    iro->Close();
+
+    toolStripStatusLabel1->Text = "Mentve";
+    toolStripStatusLabel2->Text = fajlnev;
+}
+~~~
+
+Végül a kilépést, szövegdoboz méretezést, és "Nincs mentve" feliratot is megoldjuk:
+
+~~~C++
+private: System::Void Form1_Resize(System::Object^ sender, System::EventArgs^ e) {
+    textBox1->Top = menuStrip1->Height;
+    textBox1->Left = 0;
+    textBox1->Width = this->ClientRectangle.Width;
+    textBox1->Height = this->ClientRectangle.Height - menuStrip1->Height - statusStrip1->Height;
+}
+private: System::Void toolStripMenuItem4_Click(System::Object^ sender, System::EventArgs^ e) {
+    Application::Exit();
+}
+private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+    toolStripStatusLabel1->Text = "Nincs mentve";
+}
+~~~
+
+**Eredmény**
+
+~~~C++
+String^ fajlnev;
+
+private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
+    this->Text = L"Joepad";
+    toolStripStatusLabel1->Text = L"Nincs mentve";
+    toolStripStatusLabel2->Text = L"Ismeretlen fájl";
+    toolStripMenuItem1->Text = L"Fájl";
+    toolStripMenuItem2->Text = L"Mentés";
+    toolStripMenuItem3->Text = L"Megnyitás";
+    toolStripMenuItem4->Text = L"Kilépés";
+    textBox1->Multiline = true;
+    textBox1->Top = menuStrip1->Height;
+    textBox1->Left = 0;
+    textBox1->Width = this->ClientRectangle.Width;
+    textBox1->Height = this->ClientRectangle.Height - menuStrip1->Height - statusStrip1->Height;
+    openFileDialog1->Filter = L"Minden fájl|*";
+    saveFileDialog1->Filter = L"Minden fájl|*";
+}
+    private: System::Void Form1_Resize(System::Object^ sender, System::EventArgs^ e) {
+        textBox1->Top = menuStrip1->Height;
+        textBox1->Left = 0;
+        textBox1->Width = this->ClientRectangle.Width;
+        textBox1->Height = this->ClientRectangle.Height - menuStrip1->Height - statusStrip1->Height;
+    }
+private: System::Void toolStripMenuItem4_Click(System::Object^ sender, System::EventArgs^ e) {
+    Application::Exit();
+}
+private: System::Void toolStripMenuItem2_Click(System::Object^ sender, System::EventArgs^ e) {
+    if (saveFileDialog1->ShowDialog() != Windows::Forms::DialogResult::OK) return;
+
+    fajlnev = saveFileDialog1->FileName;
+    StreamWriter^ iro = gcnew StreamWriter(fajlnev);
+    iro->Write(textBox1->Text);
+    iro->Close();
+
+    toolStripStatusLabel1->Text = "Mentve";
+    toolStripStatusLabel2->Text = fajlnev;
+}
+private: System::Void toolStripMenuItem3_Click(System::Object^ sender, System::EventArgs^ e) {
+    if (openFileDialog1->ShowDialog() != Windows::Forms::DialogResult::OK) return;
+
+    fajlnev = openFileDialog1->FileName;
+    StreamReader^ olvaso = gcnew StreamReader(fajlnev);
+    textBox1->Text = olvaso->ReadToEnd();
+    olvaso->Close();
+
+    toolStripStatusLabel1->Text = "Mentve";
+    toolStripStatusLabel2->Text = fajlnev;
+}
+private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+    toolStripStatusLabel1->Text = "Nincs mentve";
+}
+~~~
+
+![Szövegszerkesztő](képek/Szovegszerk2.png)
