@@ -10,7 +10,7 @@
   - [Rajzolás PictureBox használatával](#rajzolás-picturebox-használatával)
   - [Példa: Rezgéstani szimulátor írása](#példa-rezgéstani-szimulátor)
 - [Fájlkezelés FileDialog használatával](#fájlkezelés-filedialog-használatával)
-  - [Példa: Notepad a C++/CLI-ben](#példa-notepad-ccli-ben)
+  - [Példa: Notepad a C++/CLI-ben](#példa-szövegszerkesztő-ccli-ben)
 
 # C++/CLI nyelv alapjai
 
