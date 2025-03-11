@@ -24,6 +24,16 @@ Példa arra, hogy az eredmény hogy nézhet ki:
 
 ![Rezgéstani rendszer ábra](../képek/rugo.gif)
 
+## Interpoláció
+
+Egy szenzor kimeneti értékét akarjuk különböző pontokon nézni, de nincsen nekünk hozzá függvényünk, csak egy adatfájlunk.
+Legyen ez a fájl egy tabulátorral elválasztott csv, amit egy fájldialógussal lehet megnyitni.
+
+Az első sorban a két tengely neve van, utána pedig diszkrét mért pontok (feltételezzük, hogy sorrendben).
+A fájl betöltése után rajzold ki egy diagramra, ami jól méretezi magát a bemenetek intervallumától, vagy az ablak méretétől függetlenül.
+
+Egy textboxba kérj be egy x értéket, aminek változására egy labelre írd ki, hogy ott mennyi a mért érték (ha a mérési intervallumon kívül van, hibaüzenetet írj, különben interpolálj). A diagramon is egy piros függőleges vonallal jelöld jó érték esetében, hogy hol van az a mérési intervallumon!
+
 ## Conway's game of life
 
 Csináld meg [Conway életjátékát](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)! Legyen a képernyőn egy fekete PictureBox, ami a 20x20-as cellákból álló, 400x400 px-es játéktér lesz. Ha ide kattintasz, egy adott cella értékét invertálod (fekete cella halott, fehér élő).
@@ -36,4 +46,4 @@ Egy szimulációs lépés a következő módon néz ki:
 - Ha egy halott cellának három élő szomszédja van, életre kel
 - Ha egy élő cellának több, mint három élő szomszédja van, akkor meghal
 
-Ha be van kapcsolva a szimuláció, 250 ms-enként frissüljön a képernyő az új állapotra.
+Ha be van kapcsolva a szimuláció, 100 ms-enként frissüljön a képernyő az új állapotra.

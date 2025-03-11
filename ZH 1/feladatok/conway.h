@@ -63,7 +63,7 @@ namespace WindowsForm {
 			// 
 			// timer1
 			// 
-			this->timer1->Interval = 250;
+			this->timer1->Interval = 100;
 			this->timer1->Tick += gcnew System::EventHandler(this, &Form1::timer1_Tick);
 			// 
 			// pictureBox1

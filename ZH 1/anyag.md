@@ -21,7 +21,7 @@ A C++/CLI egyik legfontosabb különbsége az, hogy a C++ alap típusai változt
 Ezen kívül a pointerek is mások lettek: azért, hogy ne kelljen a `delete`-t hívni mindenen, speciális típusok egy ú.n. garbage collector (GC) használatával szabadulnak fel. Ezeket csillag helyett a `^` karakterrel jelöljük, létrehozásuknál a `gcnew` kulcsszót használjuk:
 
 ~~~C++
-String^ osztaly = gcnew String;
+String^ osztaly = gcnew String();
 
 osztaly += L"ő-t használhatsz, ha az idézőjel előtt van L";
 osztaly += label1->Text;
