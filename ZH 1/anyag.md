@@ -156,6 +156,8 @@ public:
         while (!olvaso->EndOfStream) {
             sor = olvaso->ReadLine();
             // nem kell ujadat() vagy más feldolgozó megoldás
+            // ';' hardcode helyett lehet kultura->TextInfo->ListSeparator is
+            // (akkor a nyelvtől függően dönti el az elválasztó karaktert)
             cli::array<String^>^ sorelemek = sor->Split(';');
             
             // ellenőrizzük, hogy tényleg 2 elem van-e
@@ -227,7 +229,7 @@ Az elemeknek a `Properties` ablakban, vagy kódban lehet beállítani a kezdeti 
 
 ![Properties Ablak](képek/Properties.png)
 
-Ahhoz, hogy függvényeket kössünk egyes eseményekhez, vagy a `Properties->Events` alablakban duplát kattintunk egy eseménytípusra, vagy a Form egyik elemére duplát kattintunk, és akkor az alapértelmezett eseményéhez generál egy függvényt. A két leggyakoribb a Button OnClick (gombnyomás) és a From Load (betöltés) eseménye szokott lenni.
+Ahhoz, hogy függvényeket kössünk egyes eseményekhez, vagy a `Properties->Events` alablakban duplát kattintunk egy eseménytípusra, vagy a Form egyik elemére duplát kattintunk, és akkor az alapértelmezett eseményéhez generál egy függvényt. A két leggyakoribb a Button_Click (gombnyomás) és a From_Load (betöltés) eseménye szokott lenni.
 
 ---
 
@@ -377,7 +379,7 @@ private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
 private: System::Void Form1_Paint(System::Object^ sender, System::Windows::Forms::PaintEventArgs^ e) {
     // Rajzosztályok létrehozása
     toll = gcnew Pen(Color::Black);
-    gr = this->CreateGraphics();
+    gr = e->Graphics;
 
     // ablak törlése, x,y tengely rajzolása
     gr->Clear(SystemColors::Control);
@@ -526,10 +528,10 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
     
     x = pictureBox1->ClientRectangle.Width / 2;
     
-    k = Double::Parse(textBox1->Text);
-    c = Double::Parse(textBox2->Text);
-    v = Double::Parse(textBox3->Text);
-    m = Double::Parse(textBox4->Text);
+    k = Convert::ToDouble(textBox1->Text);
+    c = Convert::ToDouble(textBox2->Text);
+    v = Convert::ToDouble(textBox3->Text);
+    m = Convert::ToDouble(textBox4->Text);
 
     timer1->Start();
     fut = true;
@@ -599,7 +601,8 @@ Ezért így néz ki a load függvény:
 private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
     // Megj.: ha ide Notepadet írsz, a Windows azt
     // hiszi, hogy trójai a programod
-    this->Text = L"Joepad";
+    // Ezt a nevet a MOGI tanszék kérésére megváltoztattam
+    this->Text = L"Grädit";
     toolStripStatusLabel1->Text = L"Nincs mentve";
     toolStripStatusLabel2->Text = L"Ismeretlen fájl";
     toolStripMenuItem1->Text = L"Fájl";
@@ -675,7 +678,7 @@ private: System::Void textBox1_TextChanged(System::Object^ sender, System::Event
 String^ fajlnev;
 
 private: System::Void Form1_Load(System::Object^ sender, System::EventArgs^ e) {
-    this->Text = L"Joepad";
+    this->Text = L"Grädit";
     toolStripStatusLabel1->Text = L"Nincs mentve";
     toolStripStatusLabel2->Text = L"Ismeretlen fájl";
     toolStripMenuItem1->Text = L"Fájl";
@@ -727,3 +730,120 @@ private: System::Void textBox1_TextChanged(System::Object^ sender, System::Event
 ~~~
 
 ![Szövegszerkesztő](képek/Szovegszerk2.png)
+
+# 3D grafika alapjai
+
+A 3 dimenziós grafika egy többlépéses folyamat: a térbeli pontokat/testeket először 2D-be le kell vetíteni egy szabály szerint (koordinátatranszformáció), végül ezt leképezni a képernyőnkre pixelkoordinátákba (raszterizálás).
+Ezek lehetnek axonometrikus (mérettartó) leképezések, vagy centrálisak. A centrális leképezés olyan, mint a látásunk:
+a tárgyak mérete nem csak méretüktől, hanem a távolságuktól is függ.
+
+![Leképezési típusok](https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Comparison_of_graphical_projections.svg/330px-Comparison_of_graphical_projections.svg.png)
+
+## Axonometrikus leképzések
+
+Ha egy $\underline{q} = \begin{bmatrix}x&y&z\end{bmatrix}^T$ vektort akarunk leképezni axonometrikusan, a következő lépéseink vannak:
+
+- Először a leképezési konstansokat definiáljuk  
+Ezek az egyes irányszorzók ($X, Y, Z$), valamint a *leképzett* tengelyek egymással bezárt szögei ($\alpha, \beta, \gamma$)
+
+![Axonometrikus tengelyek](képek/axonometrikus%20tengelyek.svg)
+
+- Utána egy lineáris transzformációs mátrixszal beszorozva a pontot meg lehet kapni az egyes tengelyek arányait
+
+$$\underline{q'} = \textbf{T}\cdot\underline{q}=
+\begin{bmatrix}X&0&0\\0&Y&0\\0&0&Z\end{bmatrix}\cdot\underline{q}$$
+
+- Ezután az $\R^3 \rightarrow \R^2$ leképezőmátrixszal megkapjuk a 2 dimenziós pontkoordinátánkat
+
+$$\underline{\xi} = \begin{bmatrix}\xi \\ \eta\end{bmatrix} =
+\textbf{L}\cdot\underline{q'}=\textbf{L}\cdot\textbf{T}\cdot\underline{q} =
+\begin{bmatrix}-\cos(\alpha) & \cos(\beta) & -\sin(\gamma) \\
+-\sin(\alpha) & -\sin(\beta) & \cos(\gamma)
+\end{bmatrix} \cdot
+\begin{bmatrix}X&0&0\\0&Y&0\\0&0&Z\end{bmatrix}
+\cdot\underline{q} = $$
+
+$$=\begin{bmatrix}-X\cos(\alpha) & Y\cos(\beta) & -Z\sin(\gamma) \\
+-X\sin(\alpha) & -Y\sin(\beta) & Z\cos(\gamma)
+\end{bmatrix}\cdot
+\begin{bmatrix}x\\y\\z\end{bmatrix}$$
+
+- Végül egy viewport transzformációkkal ezt képkoordinátává alakítjuk (y negatív előjelű, mert
+a képernyő koordinátarendszerén az y tengely fentről lefelé, tehát fordított irányba megy)
+
+$$\underline{\hat{x}}=\begin{bmatrix}\hat{x}\\\hat{y}\end{bmatrix} =
+\begin{bmatrix}
+\frac{\xi}{w_s} \\
+-\frac{\eta}{h_s}
+\end{bmatrix}
+\cdot\underline{\xi} +
+\begin{bmatrix} s_x + \frac{w_s}{2} \\
+s_y + \frac{h_s}{2}\end{bmatrix}
+$$
+
+![Viewport transzformáció](https://upload.wikimedia.org/wikipedia/commons/2/23/Viewport_transformation.png)
+
+Ez C++/CLI-ben a következő módon nézhet ki:
+
+~~~C++
+ref struct p2d {
+    double x, y;
+    p2d(double x, double y)
+    {
+        this->x = x, this->y = y;
+    }
+};// p2d vége
+
+ref struct p3d {
+    double x, y, z;
+    p3d(double x, double y, double z) {
+        this->x = x, this->y = y, this->z = z;
+    }
+    double f2r(double fok) {
+        return fok / 180 * Math::PI;
+    }
+    p2d^ axon(double qx, double qy, double qz, double alfa, double beta, double gamma) {
+        double a = f2r(alfa), b = f2r(beta), c = f2r(gamma);
+        p2d^ p2 = gcnew p2d(
+            -x * qx * Math::Cos(a)
+            + y * qy * Math::Cos(b)
+            - z * qz * Math::Sin(c), //kszi
+            -x * qx * Math::Sin(a)
+            - y * qy * Math::Sin(b)
+            + z * qz * Math::Cos(c)); //eta
+        return p2;
+    }
+};//p3d vége
+
+Point wvport(p2d^ vp)
+{//nagyít és középre rak
+    Point p(Convert::ToInt32(vp->x * n) + this->ClientRectangle.Width / 2, 
+        this->ClientRectangle.Height / 2 - Convert::ToInt32(vp->y * n));
+    return p;
+}
+~~~
+
+A tárgy kereteiben izometrikus és cavalier axonometriát
+alkalmazunk, ezeknek a következők a paraméterei:
+
+| Leképzés | $X [-]$ | $Y [-]$ | $Z [-]$ | $\alpha [\degree]$ | $\beta [\degree]$ | $\gamma [\degree]$|
+| :-- | :-- |:-- | :-- | :-- | :-- | :-- |
+| Izonometrikus | 1 | 1 | 1 | 30 | 30 | 0 |
+| Cavalier | 0,5 | 1 | 1 | 45 | 0 | 0 |
+
+## Centrális leképzés
+
+Ellentétben az axonometriával, a centrális leképzés *nem* lineáris, ezért a $\R^3\rightarrow\R^2$ leképzőfüggvénye máshogy néz ki:
+
+$$\underline{\xi} = \begin{bmatrix}
+\frac{x\cdot d}{z} \\ \frac{y \cdot d}{z}
+\end{bmatrix}$$
+
+Ennek a kódbeli megfelelője ezért a következő:
+
+~~~C++
+p2d^ central(double d, double zmin) {
+    p2d^ p2 = gcnew p2d(x * d / (z + zmin), y * d / (z + zmin));
+    return p2;
+}
+~~~
